@@ -38,6 +38,7 @@ def main():
     # Set up workbook for the unit type
     target_directory = r'C:\Users\delta\PycharmProjects\Project Tracking Excel Sheet'
     workbook, full_path = install_sheet_creator.create_excel_workbook(job_name, unit_type, target_directory)
+    install_sheet_creator.create_unit_sheets(workbook,unit_type)
 
     # Build the sheet
     install_sheet_creator.build_workbook(workbook, full_path,job_name, unit_type, int(num_of_units), ip_op_dict)
