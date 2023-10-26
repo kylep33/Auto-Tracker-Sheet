@@ -26,26 +26,28 @@ def read_job(sheet):
 
 
 def parse_title_text(input_text):
-    # Define a regular expression pattern
-    pattern = r'([^\]]*?)\s*Controller Points List for\s*([^\(]*?)\(typ\. Of\s*([^\)]*?)\)'
+    # Define a regular expression pattern to extract the controller type and unit type
+    pattern = r'([^\]]*?)\s*Controller Points List for\s*([^\(]*?)\(Typ\. of (\d+)\)'
 
-    # Use re.search to find the first match
+    # Use re.search to find the match
     match = re.search(pattern, input_text)
 
-    # Check if a match is found
     if match:
-        controller_type = match.group(1)
-        unit_type = match.group(2)
+        # Extract matched groups
+        controller_type = match.group(1).strip()
+        unit_type = match.group(2).strip()
         num_of_units = match.group(3)
-
-        return {
-            'controller_type': controller_type.strip(),
-            'unit_type': unit_type.strip(),
-            'num_of_units': num_of_units.strip()
-        }
     else:
-        return None
+        # Set defaults if no match is found
+        controller_type = "controller type here"
+        unit_type = "unit type here"
+        num_of_units = "1"
 
+    return {
+        'controller_type': controller_type,
+        'unit_type': unit_type,
+        'num_of_units': num_of_units
+    }
 
 def extract_unit_type(title):
     # Dictionary used to be able to extract from title. the words on the right are what can be in the title
@@ -57,23 +59,34 @@ def extract_unit_type(title):
         "ASHP": ["ASHP", "Air Source Heat Pump"],
         "VRF": ["VRF"],
         "Package Unit": ["Package Unit", "PU"],
-        "Mini Split": ["Mini Split", "MS"],  # Add more entries as needed
+        "Mini Split": ["Mini Split", "MS"],
         "Ducted Split": ["Ducted"]
     }
 
     found_terms = []
 
-    # loop through Reference Dictionary, as seen above
+    # Loop through Reference Dictionary, as seen above
     for key, targets in reference_dict.items():
         for target in targets:
             if target.lower() in title.lower():
                 found_terms.append(key)
                 break  # Break the inner loop if a match is found for the current key
 
-    if not found_terms:
-        return "enter unit type"
-    else:
+    if found_terms:
         return found_terms
+
+    # If no term from reference_dict is found, try to extract between "List for " and "(Typ."
+    start_marker = "for "
+    end_marker = "(T"
+    start_index = title.lower().find(start_marker.lower())
+    end_index = title.lower().find(end_marker.lower())
+
+    if start_index != -1 and end_index != -1:
+        unit_type = title[start_index + len(start_marker):end_index].strip()
+        return unit_type
+
+    # If neither reference_dict terms nor "List for ... (Typ." is found, return "enter unit type"
+    return "enter unit type here"
 
 
 def display_sheet_contents(sheet):

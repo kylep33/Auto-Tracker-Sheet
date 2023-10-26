@@ -12,31 +12,17 @@ FULL_EXCEL_PATH = ''
 
 
 def create_excel_workbook(job_name, unit_type, target_directory):
-    # Create a new Excel workbook
-    workbook = openpyxl.Workbook()
-
-    # Create the first sheet with the variable parameter in the name
-    sheet1 = workbook.active
-    sheet1.title = f"init page"
-
-
     # Create the full path for the target file
-    file_name = f"Project Tracking Sheet - {job_name}.xlsx"
+    file_name = f"Project Tracker - {job_name}.xlsx"
     full_path = os.path.join(target_directory, file_name)
 
-    # Save the workbook to the target directory
-    workbook.save(full_path)
-    return workbook, full_path
+    return full_path
 
 def create_unit_sheets(workbook, unit_type):
     sheet1 = workbook.active
 
-    if sheet1.title == "init page":
-        # If the first sheet is named "init page," rename it
-        sheet1.title = f"Install - {unit_type}"
-    else:
-        # Otherwise, create a new sheet with the specified name
-        workbook.create_sheet(title=f"Install - {unit_type}")
+    # Otherwise, create a new sheet with the specified name
+    workbook.create_sheet(title=f"Install - {unit_type}")
 
     # Create the second sheet named "Engineering Startup"
     workbook.create_sheet(title=f"Engineering Startup - {unit_type}")
@@ -51,7 +37,10 @@ def build_workbook(workbook, full_path, job_name, unit_type, number_of_units, ip
 
 
 def build_install_sheet(workbook, full_path, unit_type, number_of_units, ip_op_dict):
+
     install_sheet = find_install_sheet(workbook, unit_type)
+    if not install_sheet:
+        install_sheet = workbook.create_sheet(title=f"Install - {unit_type}")
 
     # Creating correct columns
     _set_headers_in_install_sheet(install_sheet, full_path)
