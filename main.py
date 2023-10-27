@@ -4,8 +4,9 @@ import sys
 import openpyxl
 import Points_List_Reader
 import install_sheet_creator
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl.drawing.image import Image
+
+
+# pyinstaller.exe --onefile --add-data "ac_logo_for_startup.jpg;." --icon=AC_logo.ico --console main.py
 
 def read_points_list(file_path):
     # Load the points list workbook
@@ -91,6 +92,63 @@ def find_points_list_file():
     return points_list_file
 
 def main():
+    try:
+        if getattr(sys, 'frozen', False):  # Check if running as an EXE
+            # Get the directory of the script or executable
+            target_directory = os.path.dirname(sys.executable)
+
+            # Find the points list file in the script's directory
+            target_points_list = find_points_list_file()
+
+            if not target_points_list:
+                print("Points list file not found in the script's directory.")
+                return
+        else:
+            # Default values if not running as an EXE
+            target_directory = r'C:\Users\delta\PycharmProjects\Project Tracking Excel Sheet'
+            target_points_list = r"C:\Users\delta\PycharmProjects\Project Tracking Excel Sheet\testing_dir\Bill of Materials and Points List.xlsx"
+        # List to store unit types
+        unit_types = {}
+
+        # List of file paths for points lists
+        file_paths = split_excel_sheets(target_points_list)
+
+        # Create a single workbook to hold all sheets
+        combined_workbook = openpyxl.Workbook()
+        combined_workbook.remove(combined_workbook.active)  # Remove the default sheet
+        job_name = "[job name]"
+        for file_path in file_paths:
+            result = read_points_list(file_path)
+            if result:
+                job_name, unit_type, num_of_units, ip_op_dict = result
+
+                # Check if the unit_type is already in the unit_types dictionary
+                if unit_type in unit_types:
+                    # If it exists, increment the count and update unit_type
+                    unit_types[unit_type] += 1
+                    enumerated_unit_type = f"{unit_type} ({unit_types[unit_type]})"
+                    unit_type = enumerated_unit_type
+                else:
+                    # If it's the first occurrence, add it to the dictionary
+                    unit_types[unit_type] = 0
+
+                # Call the function to create the install sheets within the combined workbook
+                create_install_sheets(combined_workbook, file_path, job_name, unit_type, num_of_units, ip_op_dict)
+
+        # Save the combined workbook to a single Excel file
+        combined_file_path = os.path.join(target_directory, f"Project Tracker - {job_name}.xlsx")
+        combined_workbook.save(combined_file_path)
+
+        for path in file_paths:
+            os.remove(path)
+
+    except Exception as e:
+        # Handle any exceptions that might occur during the execution
+        print(f"An error occurred: {e}")
+        input("Press any key to exit")
+        sys.exit(-1)  # Exit the script with a custom error code
+
+def main_no_try_catch():
     if getattr(sys, 'frozen', False):  # Check if running as an EXE
         # Get the directory of the script or executable
         target_directory = os.path.dirname(sys.executable)
@@ -142,4 +200,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_no_try_catch()

@@ -6,7 +6,6 @@ from openpyxl.drawing.image import Image
 from openpyxl.styles import Alignment, PatternFill, Font
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
-from openpyxl.worksheet.datavalidation import DataValidation
 
 FULL_EXCEL_PATH = ''
 
@@ -234,6 +233,8 @@ def change_colors_startup(sheet):
     red_fill = PatternFill(start_color="FFCCCC", end_color="FFCCCC", fill_type="solid")
     yellow_fill = PatternFill(start_color="FFFFCC", end_color="FFFFCC", fill_type="solid")
     green_fill = PatternFill(start_color="CCFFCC", end_color="CCFFCC", fill_type="solid")
+    greener_fill = PatternFill(start_color="98FB98", end_color="98FB98", fill_type="solid")
+
     purple_fill = PatternFill(start_color="CC99CC", end_color="CC99CC", fill_type="solid")
     blue_fill = PatternFill(start_color="CCCCFF", end_color="CCCCFF", fill_type="solid")
     grey_fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
@@ -248,8 +249,12 @@ def change_colors_startup(sheet):
             cell.fill = purple_fill
         elif cell.value is not None and cell.value.startswith("OP"):
             cell.fill = blue_fill
+        elif cell.value is not None and cell.value.startswith("Min CFM"):
+            cell.fill = green_fill
+        elif cell.value is not None and cell.value.startswith("Max CFM"):
+            cell.fill = green_fill
         elif cell.value is not None and cell.value.startswith("Engineer"):
-            cell.fill = yellow_fill
+            cell.fill = greener_fill
         elif cell.value is not None and cell.value.startswith("               NOTES"):
             cell.fill = grey_fill
 
@@ -265,8 +270,8 @@ def build_startup_sheet(workbook, full_path, job_name, unit_type, number_of_unit
     _set_headers_in_startup_sheet(startup_sheet, job_name)
     _create_ip_op_columns(startup_sheet, ip_op_dict, "startup")
 
-    add_heating_cooling_headers(startup_sheet, 5)
-    _add_end_rows_startup(startup_sheet, 5)
+    add_heating_cooling_headers(startup_sheet, 5,unit_type)
+    _add_end_rows_startup(startup_sheet, 5,unit_type)
     #
     # # Adding units
     add_units_to_sheet_startup(startup_sheet, unit_type, number_of_units)
@@ -282,8 +287,13 @@ def build_startup_sheet(workbook, full_path, job_name, unit_type, number_of_unit
     workbook.save(full_path)
 
 
-def add_heating_cooling_headers(startup_sheet, row):
-    headers = ["Room Set Point", "SA Temp", "Room Temp", "Pass"]
+def add_heating_cooling_headers(startup_sheet, row,unit_type):
+
+    if unit_type == "VAV":
+        headers = ["Min STP", "Max STP", "Room Set Point", "SA Temp", "Room Temp", "Pass"]
+    else:
+        headers = ["Room Set Point", "SA Temp", "Room Temp", "Pass"]
+
     title_headers = ["Cooling Test", "Heating Test"]
     title_fills = [PatternFill(start_color="AACCEE", end_color="AACCEE", fill_type="solid"),
                    PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")]
@@ -317,16 +327,23 @@ def get_first_empty_col(sheet, row):
     return value_counter
 
 
-def _add_end_rows_startup(startup_sheet, row):
+def _add_end_rows_startup(startup_sheet, row, unit_type):
     # Find the last used column number in the sheet
     max_col = get_first_empty_col(startup_sheet, row) - 1
 
     # Insert two columns at the very end of the sheet
     startup_sheet.insert_cols(max_col + 1, amount=2)
 
-    # Set the titles for the added columns
-    startup_sheet.cell(row=row, column=max_col + 1, value="Engineer Name")
-    startup_sheet.cell(row=row, column=max_col + 2, value="               NOTES               ")
+    if unit_type =="VAV":
+        # Set the titles for the added columns
+        startup_sheet.cell(row=row, column=max_col + 1, value="Min CFM")
+        startup_sheet.cell(row=row, column=max_col + 2, value="Max CFM")
+        startup_sheet.cell(row=row, column=max_col + 3, value="Engineer Name")
+        startup_sheet.cell(row=row, column=max_col + 4, value="               NOTES               ")
+    else:
+        # Set the titles for the added columns
+        startup_sheet.cell(row=row, column=max_col + 1, value="Engineer Name")
+        startup_sheet.cell(row=row, column=max_col + 2, value="               NOTES               ")
 
     # Print information to indicate that the operation is complete
     print("startup Initials and NOTES rows added to the very end.")
@@ -346,15 +363,18 @@ def _set_title_in_startup_sheet(startup_sheet, job_name):
 
 
 def insert_image_into_sheet(image_path, sheet):
-    # Load the image
-    img = Image(image_path)
-    img.height = img.height * .75  # Expand the image height to cover 9 rows
-    start_col = get_first_empty_col(sheet, 5) - 1
-    start_col_char = chr(64 + start_col)
+    try:
+        # Load the image
+        img = Image(image_path)
+        img.height = img.height * .75  # Expand the image height to cover 9 rows
+        start_col = get_first_empty_col(sheet, 5) - 1
+        start_col_char = chr(64 + start_col)
 
-    start_cell = start_col_char + '1'
-    # Add the image to the worksheet (top right corner)
-    sheet.add_image(img, start_cell)
+        start_cell = start_col_char + '1'
+        # Add the image to the worksheet (top right corner)
+        sheet.add_image(img, start_cell)
+    except Exception as e:
+        print(f"Unable to add Image: {e}")
 
 
 def resize_startup_sheet(sheet):

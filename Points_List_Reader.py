@@ -25,23 +25,48 @@ def read_job(sheet):
     return job
 
 
-def parse_title_text(input_text):
-    # Define a regular expression pattern to extract the controller type and unit type
-    pattern = r'([^\]]*?)\s*Controller Points List for\s*([^\(]*?)\(Typ\. of (\d+)\)'
-
-    # Use re.search to find the match
+def extract_controller_type(input_text):
+    # Define a regular expression pattern to extract the controller type
+    pattern = r'Typ\. Of (\d+)'
     match = re.search(pattern, input_text)
 
     if match:
-        # Extract matched groups
         controller_type = match.group(1).strip()
-        unit_type = match.group(2).strip()
-        num_of_units = match.group(3)
     else:
-        # Set defaults if no match is found
         controller_type = "controller type here"
-        unit_type = "unit type here"
-        num_of_units = "1"
+
+    return controller_type
+
+
+def extract_num_of_units(input_string):
+    # Convert the input string to lowercase
+    input_string_lower = input_string.lower()
+
+    # Search for the position of "typ. of" in the lowercase input
+    start_index = input_string_lower.find("typ. of")
+
+    if start_index != -1:
+        # Find the closing parenthesis after "typ. of"
+        end_index = input_string_lower.find(")", start_index)
+
+        if end_index != -1:
+            # Extract the number between "typ. of" and the closing parenthesis
+            number_str = input_string[start_index + 7:end_index]
+
+            # Try to convert the extracted string to an integer
+            try:
+                number = int(number_str)
+                return number
+            except ValueError as e:
+                print(f"ERROR: {e} - Setting to Default of 1")
+                return 1
+
+    return 1
+
+def parse_title_text(input_text):
+    controller_type = extract_controller_type(input_text)
+    unit_type = extract_unit_type(input_text)
+    num_of_units = extract_num_of_units(input_text)
 
     return {
         'controller_type': controller_type,
@@ -51,29 +76,29 @@ def parse_title_text(input_text):
 
 def extract_unit_type(title):
     # Dictionary used to be able to extract from title. the words on the right are what can be in the title
-    reference_dict = {
-        "EF": ["EF", "Exhaust", "Exhaust Fan"],
-        "WSHP": ["WSHP", "WATER SOURCE HEAT PUMP"],
-        "VAV": ["VAV"],
-        "FC": ["Fan Coil", "FC"],
-        "ASHP": ["ASHP", "Air Source Heat Pump"],
-        "VRF": ["VRF"],
-        "Package Unit": ["Package Unit", "PU"],
-        "Mini Split": ["Mini Split", "MS"],
-        "Ducted Split": ["Ducted"]
-    }
-
-    found_terms = []
-
-    # Loop through Reference Dictionary, as seen above
-    for key, targets in reference_dict.items():
-        for target in targets:
-            if target.lower() in title.lower():
-                found_terms.append(key)
-                break  # Break the inner loop if a match is found for the current key
-
-    if found_terms:
-        return found_terms
+    # reference_dict = {
+    #     "EF": ["EF", "Exhaust", "Exhaust Fan"],
+    #     "WSHP": ["WSHP", "WATER SOURCE HEAT PUMP"],
+    #     "VAV": ["VAV"],
+    #     "FC": ["Fan Coil", "FC"],
+    #     "ASHP": ["ASHP", "Air Source Heat Pump"],
+    #     "VRF": ["VRF"],
+    #     "Package Unit": ["Package Unit", "PU"],
+    #     "Mini Split": ["Mini Split", "MS"],
+    #     "Ducted Split": ["Ducted"]
+    # }
+    #
+    # found_terms = []
+    #
+    # # Loop through Reference Dictionary, as seen above
+    # for key, targets in reference_dict.items():
+    #     for target in targets:
+    #         if target.lower() in title.lower():
+    #             found_terms.append(key)
+    #             break  # Break the inner loop if a match is found for the current key
+    #
+    # if found_terms:
+    #     return found_terms
 
     # If no term from reference_dict is found, try to extract between "List for " and "(Typ."
     start_marker = "for "
