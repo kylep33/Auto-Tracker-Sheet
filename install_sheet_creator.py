@@ -129,12 +129,12 @@ def _create_ip_op_columns(install_sheet, ip_op_dict, sheet_type):
     if sheet_type == "install":
         desired_row = 1
         max_col = install_sheet.max_column
-
     else:
         desired_row = 5
         max_col = 3
 
-    # Find the last used column number in the sheet
+    print(ip_op_dict)
+    purple_fill = PatternFill(start_color="CC99CC", end_color="CC99CC", fill_type="solid")
 
     # Extract keys that are not "Spare" and split them into IP and OP categories
     ip_keys = [key for key in ip_op_dict if key.startswith('IP') and "Spare" not in ip_op_dict[key][1]]
@@ -145,10 +145,35 @@ def _create_ip_op_columns(install_sheet, ip_op_dict, sheet_type):
 
     # Insert the columns into the sheet starting from the farthest right empty column
     for col_num, key in enumerate(ordered_keys, 1):
-        header = key
+        header = shorten_ip_op(ip_op_dict[key][1])
         col_to_insert = max_col + col_num
         install_sheet.insert_cols(col_to_insert)
-        install_sheet.cell(row=desired_row, column=col_to_insert, value=header)
+        cell = install_sheet.cell(row=desired_row, column=col_to_insert, value=header)
+        cell.fill = purple_fill
+        cell.alignment = Alignment(wrapText=True)
+
+
+def shorten_ip_op(header):
+    header_dict = {
+
+        'RAT': ['Return Air Temp','RA Temp'],
+        'SAT': ['Supply Air Temp', 'SA Temp'],
+        'Spce Tmp': 'Space Temp',
+        'Wall Tmp': 'Wall Module Temp',
+        'Tmp': 'Temperature',
+        'eZNS tmp': 'eZNS Space Temp'
+
+    }
+
+    # Convert the input header and dictionary values to lowercase for case-insensitive comparison
+    header = header.lower()
+    header_dict = {k: v.lower() for k, v in header_dict.items()}
+
+    for key, value in header_dict.items():
+        if value in header:
+            return key
+
+    return header
 
 
 def _add_end_rows(install_sheet):

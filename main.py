@@ -145,6 +145,7 @@ def main():
     except Exception as e:
         # Handle any exceptions that might occur during the execution
         print(f"An error occurred: {e}")
+        print("if you got a permission denied error, close the excel worksheet and try again!")
         input("Press any key to exit")
         sys.exit(-1)  # Exit the script with a custom error code
 
