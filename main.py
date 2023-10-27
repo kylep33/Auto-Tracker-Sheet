@@ -201,4 +201,4 @@ def main_no_try_catch():
 
 
 if __name__ == "__main__":
-    main_no_try_catch()
+    main()

@@ -133,7 +133,6 @@ def _create_ip_op_columns(install_sheet, ip_op_dict, sheet_type):
         desired_row = 5
         max_col = 3
 
-    print(ip_op_dict)
     purple_fill = PatternFill(start_color="CC99CC", end_color="CC99CC", fill_type="solid")
 
     # Extract keys that are not "Spare" and split them into IP and OP categories
@@ -155,25 +154,25 @@ def _create_ip_op_columns(install_sheet, ip_op_dict, sheet_type):
 
 def shorten_ip_op(header):
     header_dict = {
-
-        'RAT': ['Return Air Temp','RA Temp'],
+        'RAT': ['Return Air Temp', 'RA Temp'],
         'SAT': ['Supply Air Temp', 'SA Temp'],
-        'Spce Tmp': 'Space Temp',
-        'Wall Tmp': 'Wall Module Temp',
-        'Tmp': 'Temperature',
-        'eZNS tmp': 'eZNS Space Temp'
-
+        'Spce Tmp': ['Space Temp'],
+        'Wall Tmp': ['Wall Module Temp'],
+        'Tmp': ['Temperature'],
+        'eZNS tmp': ['eZNS Space Temp'],
+        'Dis Air Tmp': ['Discharge Air Temp']
     }
 
-    # Convert the input header and dictionary values to lowercase for case-insensitive comparison
+    # Convert the input header to lowercase for case-insensitive comparison
     header = header.lower()
-    header_dict = {k: v.lower() for k, v in header_dict.items()}
 
-    for key, value in header_dict.items():
-        if value in header:
-            return key
+    for key, values in header_dict.items():
+        for value in values:
+            if value.lower() in header:
+                return key
 
     return header
+
 
 
 def _add_end_rows(install_sheet):
@@ -302,7 +301,7 @@ def build_startup_sheet(workbook, full_path, job_name, unit_type, number_of_unit
     add_units_to_sheet_startup(startup_sheet, unit_type, number_of_units)
     #
     # # Formatting stuff
-    insert_image_into_sheet('ac_logo_for_startup.jpg', startup_sheet)
+    # insert_image_into_sheet('ac_logo_for_startup.jpg', startup_sheet)
     resize_startup_sheet(startup_sheet)
     _set_title_in_startup_sheet(startup_sheet, job_name)
     change_colors_startup(startup_sheet)
@@ -315,7 +314,7 @@ def build_startup_sheet(workbook, full_path, job_name, unit_type, number_of_unit
 def add_heating_cooling_headers(startup_sheet, row,unit_type):
 
     if unit_type == "VAV":
-        headers = ["Min STP", "Max STP", "Room Set Point", "SA Temp", "Room Temp", "Pass"]
+        headers = ["Min STP", "Max STP", "Room STP", "SA Temp", "Room Temp", "Pass"]
     else:
         headers = ["Room Set Point", "SA Temp", "Room Temp", "Pass"]
 
@@ -418,7 +417,7 @@ def add_units_to_sheet_startup(sheet, unit_type, number_of_units):
 
 
 def main():
-    # variables that are passed in from points list reader
+    # variables that are passed in from points list reader. tthese are testing dummy vars. oh goodness i hope this works
     job_name = "test Job Name"  # title
     title = "Dac - 304 Controller Points List for EF(typ.Of 2)"
     controller_type = "Dac - 304"
